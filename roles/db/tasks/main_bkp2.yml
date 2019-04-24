@@ -1,0 +1,53 @@
+---
+# This playbook will install mysql and create db user and give permissions.
+ 
+#- name: Install MySQL 5.7 repo
+#  yum: name=http://dev.mysql.com/get/mysql57-community-release-el7-8.noarch.rpm state=present
+#
+#- name: Install MySQL Server
+#  yum: name=mysql-server state=present
+#
+- name: Install MySQL Clienr
+  yum: name=mysql-community-client state=present
+#
+#- name: Install MySQL python, this package is required to remove the anonymous user
+#  yum: name=http://mirror.centos.org/centos/7/os/x86_64/Packages/MySQL-python-1.2.5-1.el7.x86_64.rpm state=present
+
+#- name: copy .my.cnf file with root password credentials
+#  template: src=my.cnf.j2 dest=/root/.my.cnf owner=root mode=0600
+#  notify:
+#  - restart mysql
+- name: Checking user sally exists
+  mysql_user:
+    login_user: root
+    login_password: Ds65ybkKWJ#_ 
+    name: sally
+    state: absent
+
+- name: Update MySQL root password for all root accounts
+  mysql_user: name=root host={{item}} password="{{mysql_old_password}}" state=present
+  with_items:
+    - "{{ansible_hostname}}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+
+- name: Change MySQL root password
+  mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+    check_implicit_admin: true
+    login_user:     "root"
+    login_password: "{{ mysql_old_password }}"    
+
+- name: ensure mysql is running and starts on boot
+  service: name=mysqld state=started enabled=true
+
+#- name: remove the test database
+#  mysql_db: name=test state=absent
+
+- name: Create Application Database
+  mysql_db: name={{ dbname }} state=present
+
+- name: Create Application DB User
+  mysql_user: name={{ dbuser }} password={{ upassword }} priv=*.*:ALL host='%' state=present

@@ -1,0 +1,8 @@
+[webservers]
+ansiblevm01
+
+[dbservers]
+ansiblevm02
+
+[ansible_hosts]
+ansiblevm02
